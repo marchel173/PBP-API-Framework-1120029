@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"framework/controllers"
+	controllers "framework/controllers"
 	"log"
 	"net/http"
 
