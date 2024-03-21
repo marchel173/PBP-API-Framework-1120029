@@ -1,8 +1,8 @@
 package main
 
 import (
-	controllers "Framework/controllers"
 	"fmt"
+	"framework/controllers"
 	"log"
 	"net/http"
 
