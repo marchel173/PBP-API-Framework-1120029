@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	m "github.com/Martini/models"
+	m "framework/models"
 )
 
 func GetUserById(id string) m.User {
