@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	controllers "github.com/Martini/controllers"
-	models "github.com/Martini/models"
+	controllers "framework/controllers"
+	models "framework/models"
+
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
 )

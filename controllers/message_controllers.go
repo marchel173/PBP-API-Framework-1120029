@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	m "github.com/Martini/models"
+	m "framework/models"
 )
 
 func PrintError(status int, message string, w http.ResponseWriter) {
