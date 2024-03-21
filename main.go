@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	controllers "Eksplorasi-Framework-API-Go-Martini/controllers"
+	controllers "framework/controllers"
 
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
