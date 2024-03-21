@@ -2,220 +2,90 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/go-martini/martini"
 )
 
-//untuk yang array
-func SendUsersResponse(w http.ResponseWriter, message string, status int, data []User) {
-	var response UsersResponse
-	response.Status = status
-	response.Message = message
-	response.Data = data
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-//untuk yg bukan array
-func SendUserResponse(w http.ResponseWriter, message string, status int, data User) {
-	var response UserResponse
-	response.Status = status
-	response.Message = message
-	response.Data = data
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-//untuk error response
-func SendResponse(w http.ResponseWriter, message string, status int) {
-	var response MessageResponse
-	response.Status = status
-	response.Message = message
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
+func GetUserById(id string) User {
+	db := connect()
 	defer db.Close()
 
-	query := "SELECT * from users "
-
-	rows, errQuery := db.Query(query)
-	if errQuery != nil {
-		SendResponse(w, "Error Querry", 400)
+	rows, err := db.Query("SELECT * FROM Users WHERE id=?",
+		id,
+	)
+	fmt.Println(id)
+	if err != nil {
+		log.Print(err)
 	}
 
 	var user User
-	var users []User
-
 	for rows.Next() {
-		if err := rows.Scan(&user.ID, &user.Name, &user.Age, &user.Address, &user.Email, &user.Password, &user.UserType); err != nil {
-			SendResponse(w, "Internal Error", 400)
-		} else {
-			users = append(users, user)
+		if err := rows.Scan(&user.Id, &user.Nama, &user.Alamat, &user.Email, &user.Password); err != nil {
+			log.Print(err.Error())
 		}
 	}
-	SendUsersResponse(w, "Request Success", 200, users)
+	fmt.Println(user)
+	return (user)
 }
 
-func InsertNewUser(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
+func InsertUser(newUser User) bool {
+	db := connect()
 	defer db.Close()
 
-	err := r.ParseForm()
-	if err != nil {
-		SendResponse(w, "Internal Error", 400)
-		return
-	}
-
-	name := r.FormValue("name")
-	age, _ := strconv.Atoi(r.Form.Get("age"))
-	address := r.Form.Get("address")
-	email := r.Form.Get("email")
-	password := r.Form.Get("password")
-
-	result, errQuery := db.Exec("INSERT INTO users(name, age, address , email , password , userType) VALUES (?,?,?,?,?,?)",
-		name,
-		age,
-		address,
-		email,
-		password,
-		0,
-	)
-	var user User
-	temp, _ := result.LastInsertId()
-	user.ID = int(temp)
-	user.Name = name
-	user.Age = age
-	user.Address = address
-	user.Email = email
-	user.Password = password
-	user.UserType = 0
-
-	if errQuery != nil {
-		SendResponse(w, "Querry Error", 400)
-		return
-	}
-	SendUserResponse(w, "Insert Success", 200, user)
-}
-
-func UpdateUser(w http.ResponseWriter, r *http.Request, params martini.Params) {
-
-	db := Connect()
-	defer db.Close()
-
-	UserID := params["id"]
-
-	err := r.ParseForm()
-	if err != nil {
-		SendResponse(w, "Internal Error", 400)
-		return
-	}
-
-	name := r.FormValue("name")
-	age, _ := strconv.Atoi(r.Form.Get("age"))
-	address := r.Form.Get("address")
-	email := r.Form.Get("email")
-	password := r.Form.Get("password")
-	userType, _ := strconv.Atoi(r.Form.Get("userType"))
-
-	result, errQuery := db.Exec("UPDATE users SET name=?, age=?, address=? , email=? , password=? , userType=? WHERE ID=?",
-		name,
-		age,
-		address,
-		email,
-		password,
-		userType,
-		UserID,
+	_, errQuery := db.Exec("INSERT INTO users(nama, alamat, email, password) VALUES (?,?,?,?)",
+		newUser.Nama,
+		newUser.Alamat,
+		newUser.Email,
+		newUser.Password,
 	)
 
-	rowAffected, _ := result.RowsAffected()
-
-	var user User
-	user.ID, _ = strconv.Atoi(UserID)
-	user.Name = name
-	user.Age = age
-	user.Address = address
-	user.Email = email
-	user.Password = password
-	user.UserType = userType
-
-	if errQuery != nil {
-		SendResponse(w, "Query Error", 400)
-		return
+	if errQuery == nil {
+		return true
 	} else {
-		if rowAffected == 0 {
-			SendResponse(w, "No Row Affected", 400)
-			return
-		}
+		return false
 	}
-
-	SendUserResponse(w, "Update Success", 200, user)
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request, params martini.Params) {
-
-	db := Connect()
+func UpdateUser(user User) bool {
+	db := connect()
 	defer db.Close()
 
-	UserID := params["id"]
-
-	err := r.ParseForm()
-	if err != nil {
-		SendResponse(w, "Internal Error", 400)
-		return
-	}
-
-	result, errQuery := db.Exec("DELETE FROM users WHERE ID=?",
-
-		UserID,
+	fmt.Print(user)
+	_, errQuery := db.Exec("UPDATE users SET nama = ?, alamat = ?, email = ?, password = ? WHERE id = ?",
+		user.Nama,
+		user.Alamat,
+		user.Email,
+		user.Password,
+		user.Id,
 	)
 
-	rowAffected, _ := result.RowsAffected()
-
-	if errQuery != nil {
-		SendResponse(w, "Query Error", 400)
-		return
+	if errQuery == nil {
+		return true
 	} else {
-		if rowAffected == 0 {
-			SendResponse(w, "No Row Affected", 400)
-			return
-		}
+		return false
 	}
-
-	SendResponse(w, "Delete Success", 200)
 }
 
-func LoginUser(w http.ResponseWriter, r *http.Request) {
-	db := Connect()
+func DeleteUser(id string) bool {
+	db := connect()
 	defer db.Close()
 
-	err := r.ParseForm()
+	_, errQuery := db.Exec("DELETE FROM users WHERE id = ?",
+		id,
+	)
 
-	if err != nil {
-		SendResponse(w, "Internal error!", 400)
-		return
-	}
-
-	email := r.Form.Get("email")
-	password := r.Form.Get("password")
-	var user User
-
-	errQuery := db.QueryRow(`SELECT * FROM users 
-	WHERE email = ? 
-	AND password = ?`, email, password).Scan(&user.ID, &user.Name, &user.Age, &user.Address, &user.Email, &user.Password, &user.UserType)
-
-	if errQuery != nil {
-		SendUserResponse(w, "Querry Error", 400, user)
+	if errQuery == nil {
+		return true
 	} else {
-		generateToken(w, user.ID, user.Name, user.UserType)
-		SendResponse(w, "Login Success", 200)
+		return false
 	}
-
 }
-func LogoutUser(w http.ResponseWriter, r *http.Request) {
-	resetUserToken(w)
-	SendResponse(w, "Logout Success", 200)
+
+func SendResponse(w http.ResponseWriter, r *http.Request, errMessage string, status int) {
+	var response Response
+	response.Status = status
+	response.Message = errMessage
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

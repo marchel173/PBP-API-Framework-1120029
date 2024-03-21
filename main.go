@@ -1,40 +1,59 @@
 package main
 
 import (
-	"fmt"
-	controllers "framework/controllers"
-	"log"
+	"encoding/json"
 	"net/http"
+	"strconv"
+
+	controllers "Eksplorasi-Framework-API-Go-Martini/controllers"
 
 	"github.com/go-martini/martini"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/rs/cors"
+	"github.com/martini-contrib/binding"
 )
 
 func main() {
 	m := martini.Classic()
+	// GET USER BY ID
+	m.Get("/user/:id", func(w http.ResponseWriter, r *http.Request, p martini.Params) {
+		var user controllers.User
 
-	// m.Get("/users/getAllUsers", controllers.Authenticate(controllers.GetAllUsers, 1))
-	// m.Post("/users/insertNewUser", controllers.Authenticate(controllers.InsertNewUser, 0))
-
-	m.Get("/users/getAllUsers", controllers.Authenticate(1), controllers.GetAllUsers)
-	m.Post("/users/insertNewUser", controllers.Authenticate(0), controllers.InsertNewUser)
-	m.Put("/users/updateUser/:id", controllers.Authenticate(1), controllers.UpdateUser)
-	// m.Put("/users/updateUser/:id", controllers.UpdateUser)
-	m.Delete("/users/deleteUser/:id", controllers.Authenticate(1), controllers.DeleteUser)
-
-	m.Post("/users/Login", controllers.LoginUser)
-	m.Post("/users/Logout", controllers.LogoutUser)
-
-	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-		AllowCredentials: true,
+		user = controllers.GetUserById(p["id"])
+		controllers.SendResponse(w, r, "Get user sukses!", 200)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
 	})
-	handler := corsHandler.Handler(m)
+	// POST USER
+	m.Post("/user", binding.Bind(controllers.User{}), func(w http.ResponseWriter, r *http.Request, newUser controllers.User) {
+		var check bool
+		check = controllers.InsertUser(newUser)
+		if check {
+			controllers.SendResponse(w, r, "Insert sukses!", 200)
+		} else {
+			controllers.SendResponse(w, r, "Insert gagal...", 400)
+		}
+	})
+	// PUT USER / UPDATE USER
+	m.Put("/user/:id", binding.Bind(controllers.User{}), func(w http.ResponseWriter, r *http.Request, userUpdate controllers.User, p martini.Params) {
+		var check bool
+		userUpdate.Id, _ = strconv.Atoi(p["id"])
+		check = controllers.UpdateUser(userUpdate)
+		if check {
+			controllers.SendResponse(w, r, "Update sukses!", 200)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(userUpdate)
+		}
+	})
+	// DELETE USER
+	m.Delete("/user/:id", binding.Bind(controllers.User{}), func(w http.ResponseWriter, r *http.Request, p martini.Params) {
+		var check bool
+		var id = p["id"]
+		check = controllers.DeleteUser(id)
+		if check {
+			controllers.SendResponse(w, r, "Delete sukses!", 200)
+		} else {
+			controllers.SendResponse(w, r, "Id User tidak ditemukan, tidak dapat di delete...", 400)
+		}
+	})
 
-	http.Handle("/", m)
-	fmt.Println("Connect to port 8080")
 	m.RunOnAddr(":8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
 }

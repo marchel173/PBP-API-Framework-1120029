@@ -1,28 +1,14 @@
 package controllers
 
 type User struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Age      int    `json:"age"`
-	Address  string `json:"address"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	UserType int    `json:"userType"`
+	Id       int    `form:"id" json:"id"`
+	Nama     string `form:"nama" json:"nama"`
+	Alamat   string `form:"alamat" json:"alamat"`
+	Email    string `form:"email" json:"email"`
+	Password string `form:"password" json:"password"`
 }
 
-type UserResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    User   `json:"data"`
-}
-
-type UsersResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-	Data    []User `json:"data"`
-}
-
-type MessageResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
+type Response struct {
+	Status  int    `form:"status" json:"status"`
+	Message string `form:"message" json:"message"`
 }
