@@ -26,6 +26,7 @@ func GetUserById(id string) m.User {
 			&user.Name,
 			&user.Age,
 			&user.Address,
+			&user.Email,
 			&user.Password); err != nil {
 			log.Print(err.Error())
 		}
@@ -37,7 +38,7 @@ func GetUserByLogin(cekLogin m.Login) m.User {
 	db := connect()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT * FROM users WHERE name=? AND password=?", cekLogin.Name, cekLogin.Password)
+	rows, err := db.Query("SELECT * FROM users WHERE email=? AND password=?", cekLogin.Email, cekLogin.Password)
 	if err != nil {
 		log.Print(err)
 	}
@@ -48,6 +49,7 @@ func GetUserByLogin(cekLogin m.Login) m.User {
 			&user.Name,
 			&user.Age,
 			&user.Address,
+			&user.Email,
 			&user.Password); err != nil {
 			log.Print(err.Error())
 		}
@@ -59,7 +61,7 @@ func AddUser(cekRegister m.Register) bool {
 	db := connect()
 	defer db.Close()
 
-	_, errQuery := db.Exec("INSERT INTO users (name, age, address, password) values (?,?,?,?)", cekRegister.Name, cekRegister.Age, cekRegister.Address, cekRegister.Password1)
+	_, errQuery := db.Exec("INSERT INTO users (name, age, address, email, password) values (?,?,?,?,?)", cekRegister.Name, cekRegister.Age, cekRegister.Address, cekRegister.Email, cekRegister.Password1)
 
 	if errQuery == nil {
 		return true
